@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yazılar – Kayıcan Bal</title>
+  <meta name="description" content="Bal tarifleri, arı ürünleri rehberi ve saklama ipuçları.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Playfair+Display:ital,wght@1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <script>try{if(sessionStorage.getItem("kc-bee"))document.documentElement.classList.add("no-preloader")}catch(e){}</script>
+</head>
+<body data-page="yazilar">
+
+  <div id="preloader" role="status" aria-label="Yükleniyor">
+    <svg class="bee" viewBox="0 0 100 80" aria-hidden="true">
+      <defs><clipPath id="bodyClip"><ellipse cx="50" cy="48" rx="24" ry="16"/></clipPath></defs>
+      <ellipse class="wing wing-l" cx="42" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse class="wing wing-r" cx="58" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse cx="50" cy="48" rx="24" ry="16" fill="#f5b800"/>
+      <g clip-path="url(#bodyClip)" fill="#2b2b2b"><rect x="38" y="30" width="6" height="40"/><rect x="52" y="30" width="6" height="40"/></g>
+      <path d="M26 48 L16 48 L26 52 Z" fill="#2b2b2b"/>
+      <circle cx="77" cy="46" r="10" fill="#2b2b2b"/><circle cx="80" cy="43" r="2.6" fill="#fff"/>
+      <path d="M80 37 q4 -8 9 -9 M76 36 q1 -8 5 -11" stroke="#2b2b2b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <section class="page-head">
+    <p class="crumbs"><a href="index.html">Ana Sayfa</a> / Yazılar</p>
+    <h1 class="sec-title">Yazılar</h1>
+    <p class="sec-lead">Bal tarifleri, arı ürünleri rehberi ve saklama ipuçları.</p>
+  </section>
+
+  <main class="sec cream">
+    <div class="wrap">
+      <div class="toolbar list-only">
+        <p class="count" id="count"></p>
+        <div class="tools-row">
+          <label class="field">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="q" type="search" placeholder="Yazı ara…" aria-label="Yazı ara">
+          </label>
+          <div class="chips" id="chips">
+            <button class="chip is-active" data-type="all">Tümü</button>
+            <button class="chip" data-type="tarif">Tarif</button>
+            <button class="chip" data-type="blog">Blog</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="posts list-only" id="posts" aria-live="polite"></section>
+      <p class="empty list-only" id="empty" hidden>Aramanızla eşleşen yazı bulunamadı.</p>
+
+      <article class="article" id="article" hidden></article>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/data.en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/site.js"></script>
+  <script>
+    const $ = (s, r = document) => r.querySelector(s);
+    const postsEl = $("#posts"), emptyEl = $("#empty"), articleEl = $("#article");
+    let type = "all", query = "";
+    const sorted = POSTS.slice().sort((a, b) => b.date.localeCompare(a.date));
+
+    function renderList() {
+      const q = KC.lower(query).trim();
+      const list = sorted.filter(p => (type === "all" || p.type === type) && KC.lower(p.title + " " + p.excerpt).includes(q));
+      postsEl.innerHTML = list.map(KC.postCard).join("");
+      emptyEl.hidden = list.length > 0;
+      $("#count").textContent = `${list.length} yazı bulundu`;
+    }
+
+    function articleHTML(p) {
+      const prod = p.product && PRODUCTS.find(x => x.id === p.product);
+      const i = sorted.findIndex(x => x.id === p.id);
+      const prev = sorted[i + 1], next = sorted[i - 1];
+      const related = sorted.filter(x => x.id !== p.id && x.type === p.type).slice(0, 3);
+      const recipe = p.malzemeler && p.malzemeler.length ? `
+        <div class="recipe-box">
+          <div class="meta"><span>⏱ ${p.sure}</span><span>🍽 ${p.porsiyon}</span></div>
+          <h2>Malzemeler</h2><ul>${p.malzemeler.map(m => `<li>${m}</li>`).join("")}</ul>
+          <h2>Yapılışı</h2><ol>${p.yapilis.map(m => `<li>${m}</li>`).join("")}</ol>
+        </div>` : "";
+      const product = prod ? `
+        <div class="pcard" style="flex-direction:row;align-items:center;margin-top:22px" data-card data-id="${prod.id}">
+          <a class="ph" style="width:96px;align-self:stretch;flex-shrink:0;font-size:2.4rem" href="ikinci.html#urun/${prod.id}">${KC.media(prod)}</a>
+          <div class="pcard-body">
+            <span class="pcard-meta">Bu yazıyla ilgili ürün</span>
+            <h3 class="pcard-title"><a href="ikinci.html#urun/${prod.id}">${prod.name}</a></h3>
+            <div class="price">${KC.fmt(prod.variants[0].price)}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <button class="btn btn-gold btn-sm" type="button" data-add="${prod.id}">Sepete Ekle +</button>
+              <a class="btn btn-outline btn-sm ext" href="${prod.url}" ${KC.EXT}>Mağazada Aç</a>
+            </div>
+          </div>
+        </div>` : "";
+      const links = p.links ? `<div class="extlinks"><b>Daha fazla bilgi:</b> ${p.links.map(l => `<a href="${l.u}" ${KC.EXT}>${l.t} ↗</a>`).join(" · ")}</div>` : "";
+      const nav = (prev || next) ? `
+        <div class="share" style="justify-content:space-between">
+          ${prev ? `<a href="#yazi/${prev.id}">← ${prev.title}</a>` : "<span></span>"}
+          ${next ? `<a href="#yazi/${next.id}">${next.title} →</a>` : "<span></span>"}
+        </div>` : "";
+      return `
+        <button class="back" type="button" data-back>← Yazılara dön</button>
+        <div class="article-card">
+          <div class="ph article-hero">${KC.media(p)}</div>
+          <div class="article-inner">
+            <div class="meta"><span class="badge ${p.type}">${KC.TYPE_LABEL[p.type]}</span>${KC.metaHTML(p)}</div>
+            <h1>${p.title}</h1>
+            ${KC.renderBlocks(p.content)}
+            ${recipe}
+            ${product}
+            ${links}
+            <div class="share">
+              <b>Paylaş:</b>
+              ${KC.shareLinks(p.title).map(s => `<a href="${s[1]}" ${KC.EXT}>${s[0]}</a>`).join("")}
+              <button type="button" data-copy>Bağlantıyı kopyala</button>
+            </div>
+            ${nav}
+          </div>
+        </div>
+        ${related.length ? `<div class="related"><h2>Diğer ${p.type === "tarif" ? "tarifler" : "yazılar"}</h2><div class="posts">${related.map(KC.postCard).join("")}</div></div>` : ""}`;
+    }
+
+    function route() {
+      const m = location.hash.match(/^#yazi\/([\w-]+)$/);
+      const p = m && POSTS.find(x => x.id === m[1]);
+      if (p) {
+        document.title = `${p.title} – Kayıcan Bal`;
+        articleEl.innerHTML = articleHTML(p);
+        articleEl.hidden = false;
+        document.body.classList.add("view-detail");
+        window.scrollTo(0, 0);
+      } else {
+        document.title = "Yazılar – Kayıcan Bal";
+        articleEl.hidden = true; articleEl.innerHTML = "";
+        document.body.classList.remove("view-detail");
+      }
+    }
+
+    $("#chips").addEventListener("click", e => {
+      const c = e.target.closest(".chip"); if (!c) return;
+      document.querySelectorAll(".chip").forEach(x => x.classList.toggle("is-active", x === c));
+      type = c.dataset.type; renderList();
+    });
+    $("#q").addEventListener("input", e => { query = e.target.value; renderList(); });
+    articleEl.addEventListener("click", e => {
+      if (e.target.closest("[data-back]")) { history.pushState(null, "", location.pathname); route(); }
+    });
+
+    window.addEventListener("hashchange", route);
+    renderList();
+    route();
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>İletişim – Kayıcan Bal</title>
+  <meta name="description" content="Kayıcan Bal ile iletişime geçin: sipariş, ürün bilgisi ve toplu sipariş için.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Playfair+Display:ital,wght@1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <script>try{if(sessionStorage.getItem("kc-bee"))document.documentElement.classList.add("no-preloader")}catch(e){}</script>
+</head>
+<body data-page="iletisim">
+
+  <div id="preloader" role="status" aria-label="Yükleniyor">
+    <svg class="bee" viewBox="0 0 100 80" aria-hidden="true">
+      <defs><clipPath id="bodyClip"><ellipse cx="50" cy="48" rx="24" ry="16"/></clipPath></defs>
+      <ellipse class="wing wing-l" cx="42" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse class="wing wing-r" cx="58" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse cx="50" cy="48" rx="24" ry="16" fill="#f5b800"/>
+      <g clip-path="url(#bodyClip)" fill="#2b2b2b"><rect x="38" y="30" width="6" height="40"/><rect x="52" y="30" width="6" height="40"/></g>
+      <path d="M26 48 L16 48 L26 52 Z" fill="#2b2b2b"/>
+      <circle cx="77" cy="46" r="10" fill="#2b2b2b"/><circle cx="80" cy="43" r="2.6" fill="#fff"/>
+      <path d="M80 37 q4 -8 9 -9 M76 36 q1 -8 5 -11" stroke="#2b2b2b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <section class="page-head">
+    <p class="crumbs"><a href="index.html">Ana Sayfa</a> / İletişim</p>
+    <h1 class="sec-title">İletişim</h1>
+    <p class="sec-lead">Sipariş, ürün bilgisi veya toplu sipariş için bize yazın.</p>
+  </section>
+
+  <main class="sec cream">
+    <div class="contact-grid">
+      <div class="cards" id="cards"></div>
+
+      <form class="form" id="siparis" novalidate>
+        <h2>Bize yazın</h2>
+        <div class="row">
+          <label>Adınız *<input name="ad" required autocomplete="name"></label>
+          <label>Telefon veya e-posta<input name="iletisim" autocomplete="tel"></label>
+        </div>
+        <label>Konu
+          <select name="konu" id="konu">
+            <option>Sipariş / teslimat</option>
+            <option>Ürün bilgisi</option>
+            <option>Toplu sipariş</option>
+            <option>Diğer</option>
+          </select>
+        </label>
+        <label>Mesajınız *<textarea name="mesaj" required></textarea></label>
+        <div class="send" id="send"></div>
+        <p class="form-msg" id="msg" role="status"></p>
+      </form>
+    </div>
+
+    <div class="map" id="mapBox">
+      <iframe id="mapFrame" title="Harita" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <p><span id="mapText"></span><a class="ext" id="mapLink" target="_blank" rel="noopener noreferrer" href="#">Google Haritalar'da aç</a></p>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/data.en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/site.js"></script>
+  <script>
+    const $ = (s, r = document) => r.querySelector(s);
+    const S = KC.SITE;
+
+    // İletişim kartları (yalnızca doldurulan bilgiler görünür)
+    const cards = [];
+    const wa = KC.waLink(t("Merhaba, bilgi almak istiyorum."));
+    if (S.phone) cards.push(`<a class="ccard" href="tel:+${S.phone}"><i>📞</i><div><b>Telefon</b><span>${S.phoneDisplay || "+" + S.phone}</span></div></a>`);
+    if (wa) cards.push(`<a class="ccard" href="${wa}" ${KC.EXT}><i>💬</i><div><b>WhatsApp</b><span>Hemen mesaj gönderin ↗</span></div></a>`);
+    if (S.email) cards.push(`<a class="ccard" href="mailto:${S.email}"><i>✉️</i><div><b>E-posta</b><span>${S.email}</span></div></a>`);
+    if (S.address) cards.push(`<a class="ccard" href="${KC.mapLink()}" ${KC.EXT}><i>📍</i><div><b>Adres</b><span>${S.address}</span></div></a>`);
+    if (S.hours) cards.push(`<div class="ccard"><i>🕘</i><div><b>Çalışma saatleri</b><span>${S.hours}</span></div></div>`);
+    Object.keys(S.social).filter(k => S.social[k]).forEach(k => {
+      const name = { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", tiktok: "TikTok" }[k];
+      cards.push(`<a class="ccard" href="${S.social[k]}" ${KC.EXT}><i>🔗</i><div><b>${name}</b><span>Bizi takip edin ↗</span></div></a>`);
+    });
+    cards.push(`<a class="ccard" href="${S.shopUrl}" ${KC.EXT}><i>🛒</i><div><b>Çevrim içi mağaza</b><span>${S.shopUrl.replace(/^https?:\/\//, "")} ↗</span></div></a>`);
+    cards.push(`<a class="ccard" href="sss.html"><i>❓</i><div><b>Sıkça sorulan sorular</b><span>Cevabı hemen bulun</span></div></a>`);
+    if (!S.phone && !S.email && KC.DEV) {
+      cards.unshift(`<div class="devnote"><b>Geliştirici notu:</b> Telefon, e-posta, adres ve sosyal medya bağlantıları henüz girilmedi. js/site.js dosyasının başındaki SITE bölümünü doldurunca burada kartlar olarak görünür. (Bu not yalnızca yerel önizlemede görünür.)</div>`);
+    }
+    $("#cards").innerHTML = cards.join("");
+
+    // Gönder düğmeleri
+    const send = [];
+    if (S.phone) send.push(`<button class="btn btn-wa" type="button" data-send="wa">WhatsApp ile Gönder</button>`);
+    if (S.email) send.push(`<button class="btn ${S.phone ? "btn-outline" : "btn-gold"}" type="button" data-send="mail">E-posta ile Gönder</button>`);
+    if (!send.length) send.push(`<button class="btn btn-gold" type="button" data-send="copy">Mesajı Kopyala</button>`);
+    $("#send").innerHTML = send.join("");
+
+    const form = $("#siparis"), msg = $("#msg");
+    function compose() {
+      const d = new FormData(form);
+      return `${t("Konu")}: ${d.get("konu")}\n${t("Ad")}: ${d.get("ad")}\n${t("İletişim")}: ${d.get("iletisim") || "-"}\n\n${d.get("mesaj")}`;
+    }
+    form.addEventListener("click", e => {
+      const b = e.target.closest("[data-send]"); if (!b) return;
+      if (!form.ad.value.trim() || !form.mesaj.value.trim()) {
+        msg.textContent = "Lütfen adınızı ve mesajınızı yazın.";
+        (form.ad.value.trim() ? form.mesaj : form.ad).focus();
+        return;
+      }
+      const text = compose();
+      if (b.dataset.send === "wa") { window.open(KC.waLink(text), "_blank", "noopener"); msg.textContent = "WhatsApp açıldı; mesajı oradan gönderebilirsiniz."; }
+      else if (b.dataset.send === "mail") { location.href = KC.mailLink(t("Web sitesi:") + " " + form.konu.value, text); msg.textContent = "E-posta uygulamanız açılıyor…"; }
+      else { KC.copy(text); msg.textContent = "Mesaj kopyalandı. WhatsApp veya e-posta ile bize iletebilirsiniz."; }
+    });
+    form.addEventListener("submit", e => e.preventDefault());
+
+    // #siparis ile gelindiyse konuyu seç
+    if (location.hash === "#siparis") $("#konu").value = "Sipariş / teslimat";
+
+    // Harita
+    $("#mapFrame").src = KC.mapEmbed();
+    $("#mapLink").href = KC.mapLink();
+    $("#mapText").textContent = "📍 " + (S.address || S.mapQuery);
+  </script>
+</body>
+</html>

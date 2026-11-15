@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ürünlerimiz – Kayıcan Bal</title>
+  <meta name="description" content="Kayıcan Bal ürünleri: organik süzme bal, süzme bal, polen ve perga.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Playfair+Display:ital,wght@1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <script>try{if(sessionStorage.getItem("kc-bee"))document.documentElement.classList.add("no-preloader")}catch(e){}</script>
+</head>
+<body data-page="urunler">
+
+  <div id="preloader" role="status" aria-label="Yükleniyor">
+    <svg class="bee" viewBox="0 0 100 80" aria-hidden="true">
+      <defs><clipPath id="bodyClip"><ellipse cx="50" cy="48" rx="24" ry="16"/></clipPath></defs>
+      <ellipse class="wing wing-l" cx="42" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse class="wing wing-r" cx="58" cy="28" rx="11" ry="16" fill="#bfe6f5" fill-opacity=".75" stroke="#8cc6dc"/>
+      <ellipse cx="50" cy="48" rx="24" ry="16" fill="#f5b800"/>
+      <g clip-path="url(#bodyClip)" fill="#2b2b2b"><rect x="38" y="30" width="6" height="40"/><rect x="52" y="30" width="6" height="40"/></g>
+      <path d="M26 48 L16 48 L26 52 Z" fill="#2b2b2b"/>
+      <circle cx="77" cy="46" r="10" fill="#2b2b2b"/><circle cx="80" cy="43" r="2.6" fill="#fff"/>
+      <path d="M80 37 q4 -8 9 -9 M76 36 q1 -8 5 -11" stroke="#2b2b2b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <section class="page-head">
+    <p class="crumbs"><a href="index.html">Ana Sayfa</a> / Ürünlerimiz</p>
+    <h1 class="sec-title">Ürünlerimiz</h1>
+    <p class="sec-lead">Süzme bal, polen ve perga. Cam kavanozda, net miktar ve ürün bilgisiyle.</p>
+  </section>
+
+  <main class="sec">
+    <div class="wrap">
+      <div class="toolbar list-only" id="alisveris">
+        <p class="count" id="count"></p>
+        <div class="tools-row">
+          <label class="field">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="q" type="search" placeholder="Ürün ara…" aria-label="Ürün ara">
+          </label>
+          <div class="chips" id="chips">
+            <button class="chip is-active" data-cat="all">Tüm Ürünler</button>
+            <button class="chip" data-cat="bal">🍯 Bal</button>
+            <button class="chip" data-cat="ari">🐝 Arı Ürünleri</button>
+          </div>
+          <select class="sort" id="sort" aria-label="Sırala">
+            <option value="">Önerilen sıralama</option>
+            <option value="asc">Fiyat: düşükten yükseğe</option>
+            <option value="desc">Fiyat: yüksekten düşüğe</option>
+            <option value="az">İsme göre (A–Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pgrid list-only" id="grid" aria-live="polite"></div>
+      <p class="empty list-only" id="empty" hidden>Aramanızla eşleşen ürün bulunamadı.</p>
+      <p class="note list-only" id="listNote" style="margin-top:28px"></p>
+
+      <section id="detail" hidden></section>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/data.en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/site.js"></script>
+  <script>
+    const $ = (s, r = document) => r.querySelector(s);
+    const grid = $("#grid"), emptyEl = $("#empty"), detail = $("#detail");
+    let cat = "all", query = "", sortBy = "";
+    $("#listNote").textContent = PRODUCT_NOTE;
+
+    function renderList() {
+      const q = KC.lower(query).trim();
+      let list = PRODUCTS.filter(p => (cat === "all" || p.cat === cat) && KC.lower(p.name + " " + p.short).includes(q));
+      if (sortBy === "asc") list.sort((a, b) => a.variants[0].price - b.variants[0].price);
+      if (sortBy === "desc") list.sort((a, b) => b.variants[0].price - a.variants[0].price);
+      if (sortBy === "az") list.sort((a, b) => a.name.localeCompare(b.name, LANG === "en" ? "en" : "tr"));
+      grid.innerHTML = list.map(KC.productCard).join("");
+      emptyEl.hidden = list.length > 0;
+      $("#count").textContent = `${list.length} ürün bulundu`;
+    }
+
+    function detailHTML(p) {
+      const v = p.variants[0];
+      const variantUI = p.variants.length > 1
+        ? `<select class="vsel" aria-label="Seçenek">${p.variants.map((x, i) => `<option value="${i}">${x.label}</option>`).join("")}</select>`
+        : `<div class="pcard-weight">${v.label}</div>`;
+      const ask = KC.waLink(t(`Merhaba, "${p.name}" ürünü hakkında bilgi almak istiyorum.`));
+      const posts = POSTS.filter(x => x.product === p.id);
+      const others = PRODUCTS.filter(x => x.id !== p.id);
+      return `
+        <button class="back" type="button" data-back>← Ürünlere dön</button>
+        <div class="pdetail" data-card data-id="${p.id}">
+          <div class="ph pdetail-img" role="img" aria-label="${KC.esc(p.name)}">${KC.media(p)}</div>
+          <div class="pinfo">
+            <h1>${p.name}</h1>
+            <p class="lead">${p.short}</p>
+            ${variantUI}
+            <div class="price">${KC.fmt(v.price)}</div>
+            <div class="actions">
+              <button class="btn btn-gold" type="button" data-add="${p.id}">Sepete Ekle +</button>
+              <a class="btn btn-outline ext" href="${p.url}" ${KC.EXT}>Mağazada Aç</a>
+              ${ask ? `<a class="btn btn-outline ext" href="${ask}" ${KC.EXT}>WhatsApp'tan Sor</a>` : ""}
+            </div>
+            <div class="tabs" role="tablist">
+              <button class="tab is-active" data-tab="desc" role="tab">Açıklama</button>
+              <button class="tab" data-tab="usage" role="tab">Kullanım</button>
+              <button class="tab" data-tab="storage" role="tab">Saklama</button>
+            </div>
+            <div class="tab-panel" id="tabPanel" role="tabpanel"></div>
+            <div class="share">
+              <b>Paylaş:</b>
+              ${KC.shareLinks(p.name).map(s => `<a href="${s[1]}" ${KC.EXT}>${s[0]}</a>`).join("")}
+              <button type="button" data-copy>Bağlantıyı kopyala</button>
+            </div>
+            <p class="note">${PRODUCT_NOTE}</p>
+          </div>
+        </div>
+        ${posts.length ? `<div class="related"><h2>Bu ürünle ilgili yazılar</h2><div class="posts">${posts.map(KC.postCard).join("")}</div></div>` : ""}
+        <div class="related"><h2>Diğer ürünler</h2><div class="pgrid">${others.map(KC.productCard).join("")}</div></div>`;
+    }
+
+    function tabHTML(p, tab) {
+      if (tab === "usage") return `<ul>${p.usage.map(u => `<li>${u}</li>`).join("")}</ul>`;
+      if (tab === "storage") return `<p>${p.storage}</p>`;
+      return p.desc.map(t => `<p>${t}</p>`).join("");
+    }
+
+    let current = null;
+    function route() {
+      const m = location.hash.match(/^#urun\/([\w-]+)$/);
+      const p = m && PRODUCTS.find(x => x.id === m[1]);
+      if (p) {
+        current = p;
+        document.title = `${p.name} – Kayıcan Bal`;
+        detail.innerHTML = detailHTML(p);
+        $("#tabPanel").innerHTML = tabHTML(p, "desc");
+        detail.hidden = false;
+        document.body.classList.add("view-detail");
+        window.scrollTo(0, 0);
+      } else {
+        current = null;
+        document.title = "Ürünlerimiz – Kayıcan Bal";
+        detail.hidden = true; detail.innerHTML = "";
+        document.body.classList.remove("view-detail");
+      }
+    }
+
+    $("#chips").addEventListener("click", e => {
+      const c = e.target.closest(".chip"); if (!c) return;
+      document.querySelectorAll(".chip").forEach(x => x.classList.toggle("is-active", x === c));
+      cat = c.dataset.cat; renderList();
+    });
+    $("#q").addEventListener("input", e => { query = e.target.value; renderList(); });
+    $("#sort").addEventListener("change", e => { sortBy = e.target.value; renderList(); });
+
+    detail.addEventListener("click", e => {
+      if (e.target.closest("[data-back]")) { location.hash = "alisveris"; return; }
+      const t = e.target.closest(".tab");
+      if (t && current) {
+        detail.querySelectorAll(".tab").forEach(x => x.classList.toggle("is-active", x === t));
+        $("#tabPanel").innerHTML = tabHTML(current, t.dataset.tab);
+      }
+    });
+
+    window.addEventListener("hashchange", route);
+    renderList();
+    route();
+  </script>
+</body>
+</html>
